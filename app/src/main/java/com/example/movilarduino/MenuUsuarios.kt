@@ -12,6 +12,8 @@ import androidx.core.view.WindowInsetsCompat
 private lateinit var btnadduser : Button
 private lateinit var btnviewusers : Button
 
+private lateinit var btnlistarSensores : Button
+
 class MenuUsuarios : AppCompatActivity() {
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,6 +27,7 @@ class MenuUsuarios : AppCompatActivity() {
         }
         btnadduser = findViewById(R.id.buttonAddUser)
         btnviewusers =findViewById(R.id.buttonViewUsers)
+        btnlistarSensores =findViewById(R.id.listarSensor)
 
         btnadduser.setOnClickListener {
             val intent = Intent(this, AgregarUsuario::class.java)
@@ -32,6 +35,10 @@ class MenuUsuarios : AppCompatActivity() {
         }
         btnviewusers.setOnClickListener {
             val intent = Intent(this, ListarUsuarios::class.java)
+            startActivity(intent)
+        }
+        btnlistarSensores.setOnClickListener {
+            val intent = Intent(this, ListarSensores::class.java)
             startActivity(intent)
         }
 
