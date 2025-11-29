@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -12,6 +11,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.android.volley.Request
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
+import cn.pedant.SweetAlert.SweetAlertDialog
 import org.json.JSONObject
 
 private lateinit var btnIngresar: Button
@@ -30,7 +30,6 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        // Vincular elementos del XML
         btnIngresar = findViewById(R.id.buttonLogin)
         editEmail = findViewById(R.id.editTextEmailAddress)
         editPassword = findViewById(R.id.editTextPassword)
@@ -46,7 +45,18 @@ class MainActivity : AppCompatActivity() {
         val password = editPassword.text.toString().trim()
 
         if (email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Ingrese email y contraseña", Toast.LENGTH_SHORT).show()
+            SweetAlertDialog(this, SweetAlertDialog.WARNING_TYPE)
+                .setTitleText("Campos vacíos")
+                .setContentText("Ingrese email y contraseña")
+                .show()
+            return
+        }
+
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                .setTitleText("Email inválido")
+                .setContentText("Ingrese un email con un formato válido")
+                .show()
             return
         }
 
@@ -61,30 +71,64 @@ class MainActivity : AppCompatActivity() {
 
                     if (json.getBoolean("success")) {
 
-                        Toast.makeText(this, "Bienvenido!", Toast.LENGTH_LONG).show()
+                        val primeraVez = json.getInt("primera_vez")
+                        val idUsuario = json.getInt("id_usuario")
+                        val idDepartamento = json.getInt("id_departamento")
 
-                        // Guardar los IDs en SharedPreferences
+                        // Guardar IDs en SharedPreferences
                         val prefs = getSharedPreferences("user_data", MODE_PRIVATE)
                         prefs.edit().apply {
-                            putInt("id_usuario", json.getInt("id_usuario"))
-                            putInt("id_departamento", json.getInt("id_departamento"))
+                            putInt("id_usuario", idUsuario)
+                            putInt("id_departamento", idDepartamento)
                             apply()
                         }
 
-                        // Ir al menú
-                        val intent = Intent(this, MenuAdministrador::class.java)
-                        startActivity(intent)
+                        if (primeraVez == 1) {
+
+                            SweetAlertDialog(this, SweetAlertDialog.WARNING_TYPE)
+                                .setTitleText("Nueva contraseña requerida")
+                                .setContentText("Debe crear una nueva contraseña")
+                                .setConfirmText("Continuar")
+                                .setConfirmClickListener {
+                                    val intent = Intent(this, CambiarContrasenia::class.java)
+                                    intent.putExtra("id_usuario", idUsuario)
+                                    startActivity(intent)
+                                    it.dismissWithAnimation()
+                                }
+                                .show()
+
+                        } else {
+                            SweetAlertDialog(this, SweetAlertDialog.SUCCESS_TYPE)
+                                .setTitleText("Bienvenido!")
+                                .setContentText("Inicio de sesión exitoso")
+                                .setConfirmText("Continuar")
+                                .setConfirmClickListener {
+                                    val intent = Intent(this, MenuAdministrador::class.java)
+                                    startActivity(intent)
+                                    it.dismissWithAnimation()
+                                }
+                                .show()
+                        }
 
                     } else {
-                        Toast.makeText(this, json.getString("message"), Toast.LENGTH_LONG).show()
+                        SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                            .setTitleText("Error")
+                            .setContentText(json.getString("message"))
+                            .show()
                     }
 
                 } catch (e: Exception) {
-                    Toast.makeText(this, "Error de formato JSON: ${e.message}", Toast.LENGTH_LONG).show()
+                    SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                        .setTitleText("Error JSON")
+                        .setContentText(e.message.toString())
+                        .show()
                 }
             },
             { error ->
-                Toast.makeText(this, "Error de conexión: ${error.message}", Toast.LENGTH_LONG).show()
+                SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                    .setTitleText("Error de conexión")
+                    .setContentText(error.message ?: "Error desconocido")
+                    .show()
             }
         ) {
             override fun getParams(): MutableMap<String, String> {
@@ -98,3 +142,5 @@ class MainActivity : AppCompatActivity() {
         Volley.newRequestQueue(this).add(stringRequest)
     }
 }
+
+
