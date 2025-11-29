@@ -30,8 +30,6 @@ class AgregarUsuario : AppCompatActivity() {
         val prefs = getSharedPreferences("user_data", MODE_PRIVATE)
         idUsuarioActual = prefs.getInt("id_usuario", 0)
         idDepartamentoActual = prefs.getInt("id_departamento", 0)
-        Toast.makeText(this, "id usuario actual: $idUsuarioActual", Toast.LENGTH_LONG).show()
-        Toast.makeText(this, "id dpto actual: $idDepartamentoActual", Toast.LENGTH_LONG).show()
 
         // === Configurar Spinner ===
         val spinner: Spinner = findViewById(R.id.spinnerTipoSensor)
