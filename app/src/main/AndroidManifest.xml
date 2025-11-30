@@ -18,6 +18,12 @@
         android:usesCleartextTraffic="true"
         tools:replace="android:icon">
         <activity
+            android:name=".EditarSensor"
+            android:exported="false" />
+        <activity
+            android:name=".ListarSensores"
+            android:exported="false" />
+        <activity
             android:name=".ListarUsuarios"
             android:exported="false" />
         <activity
@@ -41,9 +47,6 @@
         <activity
             android:name=".MenuAdministrador"
             android:exported="false" />
-        <activity
-            android:name=".ListarSensores"
-            android:exported="false"/>
         <activity
             android:name=".MainActivity"
             android:exported="true">
