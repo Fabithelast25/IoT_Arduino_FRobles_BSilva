@@ -1,76 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<TableRow xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="4dp">
+    android:padding="10dp">
 
     <TextView
-        android:id="@+id/txtNombre"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:padding="4dp"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
-        android:gravity="center"
-        android:textAlignment="center"/>
+        android:id="@+id/txtNombreUsuario"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
     <TextView
-        android:id="@+id/txtApellido"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:padding="4dp"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
-        android:gravity="center"
-        android:textAlignment="center"/>
+        android:id="@+id/txtApellidoUsuario"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
     <TextView
-        android:id="@+id/txtEmail"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:padding="4dp"
-        android:textColor="#FFFFFF"
-        android:textSize="12sp"
-        android:gravity="center"
-        android:textAlignment="center"/>
+        android:id="@+id/txtEmailUsuario"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
     <TextView
-        android:id="@+id/txtEstado"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:padding="4dp"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
-        android:gravity="center"
-        android:textAlignment="center"/>
+        android:id="@+id/txtEstadoUsuario"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
     <TextView
-        android:id="@+id/txtTelefono"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:padding="4dp"
-        android:textColor="#FFFFFF"
-        android:textSize="12sp"
-        android:gravity="center"
-        android:textAlignment="center"/>
+        android:id="@+id/txtTelefonoUsuario"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
     <TextView
-        android:id="@+id/txtRut"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:padding="4dp"
-        android:textColor="#FFFFFF"
-        android:textSize="12sp"
-        android:gravity="center"
-        android:textAlignment="center"/>
+        android:id="@+id/txtRutUsuario"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
-</TableRow>
+</LinearLayout>
 
 
