@@ -1,116 +1,95 @@
 package com.example.movilarduino
 
-import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
 import android.widget.ListView
-import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
+import android.widget.SimpleAdapter
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.android.volley.Request
-import com.android.volley.RequestQueue
-import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.JsonArrayRequest
 import com.android.volley.toolbox.Volley
-import org.json.JSONArray
-import java.text.Normalizer
-
-// Declara el ListView que mostrará los sensores
-private lateinit var listado: ListView
-
-// Lista donde se almacenarán objetos Sensor
-private lateinit var listaSensor: ArrayList<Sensor>
-
-// Lista para filtrar sensores (más adelante si quieres buscar)
-private lateinit var listaFiltrada: ArrayList<Sensor>
-
-// Adaptador encargado de inflar cada ítem de la lista
-private lateinit var adapter: SensorAdapter
-
-// Cola de peticiones Volley
-private lateinit var dato: RequestQueue
 
 class ListarSensores : AppCompatActivity() {
 
-    @SuppressLint("MissingInflatedId")
+    private lateinit var listView: ListView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        enableEdgeToEdge() // Ajusta el layout para ocupar toda la pantalla
         setContentView(R.layout.activity_listar_sensores)
 
-        // Ajusta margenes según la barra del sistema
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+        // Guardamos referencia al ListView para usarlo después
+        listView = findViewById(R.id.listaSensores)
+
+        // Cuando se toque un item, abrimos pantalla de edición
+        listView.setOnItemClickListener { parent, view, position, id ->
+            val item = parent.getItemAtPosition(position) as HashMap<String, String>
+
+            val intent = Intent(this, EditarSensor::class.java)
+            intent.putExtra("dueno", item["nombre"])
+            intent.putExtra("codigo", item["codigo"]!!.removePrefix("Código: "))
+            intent.putExtra("tipo", item["tipo"]!!.removePrefix("Tipo: "))
+            intent.putExtra("estado", item["estado"]!!.removePrefix("Estado: "))
+            intent.putExtra("fechaAlta", item["fechaAlta"]!!.removePrefix("Alta: "))
+            intent.putExtra("fechaBaja", item["fechaBaja"]!!.removePrefix("Baja: "))
+            startActivity(intent)
         }
-
-        listado = findViewById(R.id.listaSensores) // Vincula el ListView del layout
-        dato = Volley.newRequestQueue(this)        // Inicializa la cola de Volley
-
-        listaSensor = ArrayList()   // Crea la lista vacía de sensores
-        listaFiltrada = ArrayList() // Lista auxiliar para filtros
-
-        cargarLista() // Llama al metodo que consulta la API
     }
 
-    private fun cargarLista() {
-        listaSensor.clear() // Limpia la lista antes de cargar nuevos datos
+    override fun onResume() {
+        super.onResume()
+        cargarSensores() // Aquí refrescamos la lista SIEMPRE
+    }
 
-        val url = "http://98.95.8.72/consulta_sensores.php" // URL del backend
+    private fun cargarSensores() {
+        // Obtenemos el ListView y el id del departamento
+        val prefs = getSharedPreferences("user_data", MODE_PRIVATE)
+        val idDepartamento = prefs.getInt("id_departamento", 0)
 
-        // Crea la petición GET a la URL
-        val request = StringRequest(
-            Request.Method.GET, url,
-            { response ->               // Si la conexión es exitosa
-                try {
-                    val json = JSONArray(response) // Convierte la respuesta en JSON
+        // URL con el id del departamento
+        val url = "http://98.95.8.72/consulta_sensores.php?id_departamento=$idDepartamento"
 
-                    for (i in 0 until json.length()) { // Recorre el JSON
-                        val sensor = json.getJSONObject(i) // Obtiene un objeto por vez
+        // Cola de solicitudes para Volley
+        val queue = Volley.newRequestQueue(this)
 
-                        // Extrae cada campo del sensor desde el JSON
-                        val nombre = sensor.getString("nombres")
-                        val apellido = sensor.getString("apellidos")
-                        val codigo = sensor.getString("codigo_sensor")
-                        val estado = sensor.getString("estado")
-                        val tipo = sensor.getString("tipo")
-                        val fechaAlta = sensor.getString("fecha_alta")
-                        val fechaBaja = sensor.optString("fecha_baja", null)
+        // Solicitud JSON al servidor
+        val request = JsonArrayRequest(
+            Request.Method.GET, url, null,
+            { response ->
+                // Lista donde guardaremos los sensores
+                val lista = ArrayList<HashMap<String, String>>()
 
-                        // Crea un objeto Sensor con los datos extraídos
-                        val sensorObj = Sensor(
-                            nombre = nombre,
-                            apellido = apellido,
-                            codigo_sensor = codigo,
-                            estado = estado,
-                            tipo = tipo,
-                            fecha_alta = fechaAlta,
-                            fecha_baja = fechaBaja
-                        )
+                // Recorrer respuesta
+                for (i in 0 until response.length()) {
+                    val item = response.getJSONObject(i)
 
-                        listaSensor.add(sensorObj) // Lo agrega a la lista
-                    }
+                    val map = HashMap<String, String>()
+                    map["nombre"] = item.getString("nombres") + " " + item.getString("apellidos")
+                    map["codigo"] = "Código: " + item.getString("codigo_sensor")
+                    map["tipo"] = "Tipo: " + item.getString("tipo")
+                    map["estado"] = "Estado: " + item.getString("estado")
+                    map["fechaAlta"] = "Alta: " + item.getString("fecha_alta")
+                    map["fechaBaja"] = if (item.isNull("fecha_baja")) "Baja: " else "Baja: " + item.getString("fecha_baja")
 
-                    adapter = SensorAdapter(this, listaSensor) // Crea el adaptador
-                    listado.adapter = adapter                 // Asigna adaptador a la vista
-
-                } catch (e: Exception) {
-                    Toast.makeText(this, "Error parseando JSON: ${e.message}", Toast.LENGTH_LONG).show()
+                    lista.add(map)
                 }
+
+                // Adaptador para mostrar los datos
+                val adapter = SimpleAdapter(
+                    this,
+                    lista,
+                    R.layout.item_sensor,
+                    arrayOf("nombre", "codigo", "tipo", "estado", "fechaAlta", "fechaBaja"),
+                    intArrayOf(R.id.txtNombre, R.id.txtCodigo, R.id.txtTipo, R.id.txtEstado, R.id.txtFechaAlta, R.id.txtFechaBaja)
+                )
+
+                listView.adapter = adapter
             },
-            { error ->
-                Toast.makeText(this, "Error de conexión: ${error.message}", Toast.LENGTH_LONG).show()
+            {
+                println("Error cargando sensores")
             }
         )
 
-        dato.add(request) // Agrega la petición a la cola de Volley
-    }
-
-    private fun normalizar(texto: String): String {
-        return Normalizer.normalize(texto, Normalizer.Form.NFD)
-            .replace("[^\\p{ASCII}]".toRegex(), "")
-            .lowercase()
+        queue.add(request)
     }
 }
+
