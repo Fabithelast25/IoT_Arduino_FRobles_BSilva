@@ -21,6 +21,9 @@
             android:name=".EditarSensor"
             android:exported="false" />
         <activity
+            android:name=".CambiarContrasenia"
+            android:exported="false" />
+        <activity
             android:name=".ListarSensores"
             android:exported="false" />
         <activity
