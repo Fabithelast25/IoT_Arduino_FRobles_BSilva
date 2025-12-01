@@ -21,6 +21,9 @@
             android:name=".LlaveroDigital"
             android:exported="false" />
         <activity
+            android:name=".MenuResidente"
+            android:exported="false" />
+        <activity
             android:name=".EditarUsuario"
             android:exported="false" />
         <activity

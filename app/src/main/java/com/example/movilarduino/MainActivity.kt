@@ -76,7 +76,7 @@ class MainActivity : AppCompatActivity() {
                         val idDepartamento = json.getInt("id_departamento")
                         val idSensor = json.getInt("id_sensor")
                         val rol = json.getString("rol")  // 👈 AQUI RECIBIMOS EL ROL
-
+                        
                         val prefs = getSharedPreferences("user_data", MODE_PRIVATE)
                         prefs.edit().apply {
                             putInt("id_usuario", idUsuario)
