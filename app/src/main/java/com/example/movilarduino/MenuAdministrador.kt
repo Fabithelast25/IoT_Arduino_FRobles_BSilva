@@ -12,6 +12,8 @@ import androidx.core.view.WindowInsetsCompat
 private lateinit var btnsensors : Button
 private lateinit var btnviewregisters: Button
 
+private lateinit var btnAbrirCerrar: Button
+
 class MenuAdministrador : AppCompatActivity() {
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,6 +27,7 @@ class MenuAdministrador : AppCompatActivity() {
         }
         btnsensors = findViewById(R.id.buttonSensors)
         btnviewregisters = findViewById(R.id.buttonViewRegisters)
+        btnAbrirCerrar = findViewById(R.id.btnAbrirCerrar)
 
         btnsensors.setOnClickListener {
             val intent = Intent(this, MenuUsuarios::class.java)
@@ -34,5 +37,10 @@ class MenuAdministrador : AppCompatActivity() {
             val intent = Intent(this, EventosAcceso::class.java)
             startActivity(intent)
         }
+        btnAbrirCerrar.setOnClickListener {
+            val intent = Intent(this, LlaveroDigital::class.java)
+            startActivity(intent)
+        }
+
     }
 }

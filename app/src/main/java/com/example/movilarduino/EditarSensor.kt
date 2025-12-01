@@ -7,6 +7,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.android.volley.Request
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
+import cn.pedant.SweetAlert.SweetAlertDialog
+
 
 class EditarSensor : AppCompatActivity() {
 
@@ -49,57 +51,89 @@ class EditarSensor : AppCompatActivity() {
 
         btnGuardar.setOnClickListener {
             val nuevoEstado = spinnerEstado.selectedItem.toString()
-            val url = "http://98.95.8.72/editar_sensor.php?codigo=$codigo&estado=$nuevoEstado"
-            val queue = Volley.newRequestQueue(this)
 
-            val request = StringRequest(Request.Method.GET, url, { response ->
+            // Alerta de confirmación
+            SweetAlertDialog(this, SweetAlertDialog.WARNING_TYPE)
+                .setTitleText("¿Deseas guardar los cambios?")
+                .setContentText("Se actualizará el estado del sensor a $nuevoEstado")
+                .setConfirmText("Sí")
+                .setCancelText("No")
+                .setConfirmClickListener { sDialog ->
 
-                Toast.makeText(this, "Actualizado correctamente", Toast.LENGTH_SHORT).show()
+                    val url = "http://98.95.8.72/editar_sensor.php?codigo=$codigo&estado=$nuevoEstado"
+                    val queue = Volley.newRequestQueue(this)
 
-                // Devuelve resultado a la Activity anterior
-                val intent = Intent()
-                setResult(RESULT_OK, intent)
-                finish()
+                    val request = StringRequest(Request.Method.GET, url, { response ->
 
-            }, {
-                Toast.makeText(this, "Error al actualizar", Toast.LENGTH_SHORT).show()
-            })
+                        // Alerta de éxito
+                        SweetAlertDialog(this, SweetAlertDialog.SUCCESS_TYPE)
+                            .setTitleText("¡Sensor modificado!")
+                            .setConfirmText("Aceptar")
+                            .setConfirmClickListener {
+                                it.dismissWithAnimation()
+                                setResult(RESULT_OK)
+                                finish()
+                            }
+                            .show()
 
-            queue.add(request)
+                    }, {
+                        SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                            .setTitleText("Error")
+                            .setContentText("No se pudo actualizar el sensor")
+                            .setConfirmText("Aceptar")
+                            .show()
+                    })
+
+                    queue.add(request)
+                    sDialog.dismissWithAnimation() // cerrar confirmación
+                }
+                .setCancelClickListener { sDialog ->
+                    sDialog.dismissWithAnimation()
+                }
+                .show()
         }
 
         val btnEliminar = findViewById<Button>(R.id.btnEliminar)
 
-        // 1) Cuando se pulse el botón eliminar
         btnEliminar.setOnClickListener {
 
-            // 2) Obtiene el código del sensor
-            val codigo = intent.getStringExtra("codigo") ?: ""
+            SweetAlertDialog(this, SweetAlertDialog.WARNING_TYPE)
+                .setTitleText("¿Deseas eliminar este sensor?")
+                .setContentText("Esta acción no se puede deshacer")
+                .setConfirmText("Sí, eliminar")
+                .setCancelText("Cancelar")
+                .setConfirmClickListener { sDialog ->
 
-            // 3) URL hacia el PHP de eliminación
-            val url = "http://98.95.8.72/eliminar_sensor.php?codigo_sensor=$codigo"
+                    val codigo = intent.getStringExtra("codigo") ?: ""
+                    val url = "http://98.95.8.72/eliminar_sensor.php?codigo_sensor=$codigo"
+                    val queue = Volley.newRequestQueue(this)
 
-            // 4) Creamos la cola de peticiones
-            val queue = Volley.newRequestQueue(this)
+                    val request = StringRequest(Request.Method.GET, url,
+                        {
+                            SweetAlertDialog(this, SweetAlertDialog.SUCCESS_TYPE)
+                                .setTitleText("¡Sensor eliminado!")
+                                .setConfirmText("Aceptar")
+                                .setConfirmClickListener {
+                                    it.dismissWithAnimation()
+                                    finish()
+                                }
+                                .show()
+                        },
+                        {
+                            SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                                .setTitleText("Error")
+                                .setContentText("No se pudo eliminar el sensor")
+                                .setConfirmText("Aceptar")
+                                .show()
+                        })
 
-            // 5) Petición GET hacia el PHP
-            val request = StringRequest(
-                Request.Method.GET, url,
-                {
-                    // 6) Mensaje de éxito
-                    Toast.makeText(this, "Sensor eliminado correctamente", Toast.LENGTH_LONG).show()
-
-                    // 7) Cerramos esta pantalla y volvemos a la lista
-                    finish()
-                },
-                {
-                    // 8) Mensaje de error
-                    Toast.makeText(this, "Error al eliminar", Toast.LENGTH_LONG).show()
+                    queue.add(request)
+                    sDialog.dismissWithAnimation()
                 }
-            )
-
-            // 9) Ejecutamos la petición
-            queue.add(request)
+                .setCancelClickListener { sDialog ->
+                    sDialog.dismissWithAnimation()
+                }
+                .show()
         }
     }
 }

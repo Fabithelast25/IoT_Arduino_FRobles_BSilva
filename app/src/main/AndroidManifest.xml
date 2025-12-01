@@ -18,6 +18,9 @@
         android:usesCleartextTraffic="true"
         tools:replace="android:icon">
         <activity
+            android:name=".LlaveroDigital"
+            android:exported="false" />
+        <activity
             android:name=".MenuResidente"
             android:exported="false" />
         <activity
@@ -40,12 +43,6 @@
             android:exported="false" />
         <activity
             android:name=".RegistrosUsuario"
-            android:exported="false" />
-        <activity
-            android:name=".AgregarSensor"
-            android:exported="false" />
-        <activity
-            android:name=".MenuSensores"
             android:exported="false" />
         <activity
             android:name=".AgregarUsuario"

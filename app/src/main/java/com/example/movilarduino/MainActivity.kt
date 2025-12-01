@@ -74,13 +74,14 @@ class MainActivity : AppCompatActivity() {
                         val primeraVez = json.getInt("primera_vez")
                         val idUsuario = json.getInt("id_usuario")
                         val idDepartamento = json.getInt("id_departamento")
+                        val idSensor = json.getInt("id_sensor")
                         val rol = json.getString("rol")  // 👈 AQUI RECIBIMOS EL ROL
-
-                        // Guardar IDs en SharedPreferences
+                        
                         val prefs = getSharedPreferences("user_data", MODE_PRIVATE)
                         prefs.edit().apply {
                             putInt("id_usuario", idUsuario)
                             putInt("id_departamento", idDepartamento)
+                            putInt("id_sensor", idSensor) // ⬅ aquí se guarda
                             putString("rol", rol)
                             apply()
                         }
