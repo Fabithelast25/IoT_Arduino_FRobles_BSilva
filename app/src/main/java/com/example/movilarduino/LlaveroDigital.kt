@@ -11,6 +11,8 @@ import com.android.volley.Request
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
+import cn.pedant.SweetAlert.SweetAlertDialog
+
 
 class LlaveroDigital : AppCompatActivity() {
 
@@ -36,27 +38,63 @@ class LlaveroDigital : AppCompatActivity() {
     private fun enviarSolicitudAcceso() {
         val url = "http://98.95.8.72/registrar_evento.php"
 
-        // Recupera id del usuario y sensor guardados en login
         val prefs = getSharedPreferences("user_data", MODE_PRIVATE)
-        val idUsuario = prefs.getInt("id_usuario", 0).toString()
         val idSensor = prefs.getInt("id_sensor", 0).toString()
 
+        if (idSensor == "0") {
+            SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                .setTitleText("Error")
+                .setContentText("No hay sensor asignado")
+                .setConfirmText("Aceptar")
+                .show()
+            return
+        }
+
         val request = object : StringRequest(Method.POST, url,
-            { Toast.makeText(this, "Solicitud enviada", Toast.LENGTH_SHORT).show() },
-            { Toast.makeText(this, "Error enviando solicitud", Toast.LENGTH_SHORT).show() }
+            { response ->
+                if(response.trim() == "OK"){
+                    SweetAlertDialog(this, SweetAlertDialog.SUCCESS_TYPE)
+                        .setTitleText("¡Solicitud enviada!")
+                        .setConfirmText("Aceptar")
+                        .show()
+                } else {
+                    SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                        .setTitleText("Error servidor")
+                        .setContentText(response)
+                        .setConfirmText("Aceptar")
+                        .show()
+                }
+            },
+            { error ->
+                SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                    .setTitleText("Error")
+                    .setContentText("No se pudo enviar la solicitud: ${error.message}")
+                    .setConfirmText("Aceptar")
+                    .show()
+            }
         ) {
             override fun getParams(): MutableMap<String, String> {
                 val p = HashMap<String, String>()
-                p["id_usuario"] = idUsuario
                 p["id_sensor"] = idSensor
-                p["tipo_evento"] = "SOLICITUD_ACCESO"
-                p["resultado"] = "PENDIENTE"
                 return p
             }
         }
 
-        Volley.newRequestQueue(this).add(request)
+        SweetAlertDialog(this, SweetAlertDialog.WARNING_TYPE)
+            .setTitleText("Confirmar")
+            .setContentText("¿Deseas enviar la solicitud de acceso?")
+            .setConfirmText("Sí")
+            .setCancelText("No")
+            .setConfirmClickListener { sDialog ->
+                sDialog.dismissWithAnimation()
+                Volley.newRequestQueue(this).add(request)
+            }
+            .setCancelClickListener { sDialog ->
+                sDialog.dismissWithAnimation()
+            }
+            .show()
     }
+
 
     private fun iniciarActualizacionAutomatica() {
         handler.post(object : Runnable {
@@ -76,7 +114,6 @@ class LlaveroDigital : AppCompatActivity() {
             null,
             { response ->
                 val estado = response.getString("estado_barrera")
-
                 if (estado == "ABIERTO") {
                     imgEstado.setImageResource(R.drawable.barrera_abierta)
                 } else {
@@ -84,7 +121,11 @@ class LlaveroDigital : AppCompatActivity() {
                 }
             },
             {
-                Toast.makeText(this, "Error obteniendo estado", Toast.LENGTH_SHORT).show()
+                SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                    .setTitleText("Error")
+                    .setContentText("No se pudo obtener el estado de la barrera")
+                    .setConfirmText("Aceptar")
+                    .show()
             }
         )
 
