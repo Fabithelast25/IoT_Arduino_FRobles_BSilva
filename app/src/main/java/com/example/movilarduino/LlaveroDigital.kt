@@ -39,9 +39,10 @@ class LlaveroDigital : AppCompatActivity() {
         val url = "http://98.95.8.72/registrar_evento.php"
 
         val prefs = getSharedPreferences("user_data", MODE_PRIVATE)
-        val idSensor = prefs.getInt("id_sensor", 0).toString()
 
-        if (idSensor == "0") {
+        val codigoSensor = prefs.getString("codigo_sensor", null)
+
+        if (codigoSensor.isNullOrEmpty()) {
             SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
                 .setTitleText("Error")
                 .setContentText("No hay sensor asignado")
@@ -52,33 +53,55 @@ class LlaveroDigital : AppCompatActivity() {
 
         val request = object : StringRequest(Method.POST, url,
             { response ->
-                if(response.trim() == "OK"){
-                    SweetAlertDialog(this, SweetAlertDialog.SUCCESS_TYPE)
-                        .setTitleText("¡Solicitud enviada!")
-                        .setConfirmText("Aceptar")
-                        .show()
-                } else {
-                    SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
-                        .setTitleText("Error servidor")
-                        .setContentText(response)
-                        .setConfirmText("Aceptar")
-                        .show()
+
+                val r = response.trim()
+
+                when(r) {
+
+                    "ABIERTO" -> {
+                        SweetAlertDialog(this, SweetAlertDialog.SUCCESS_TYPE)
+                            .setTitleText("Acceso concedido")
+                            .setContentText("La solicitud se ha llevado con éxito")
+                            .show()
+                    }
+
+                    "PENDIENTE" -> {
+                        SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                            .setTitleText("Acceso denegado")
+                            .setContentText("Ha sido enviada una solicitud de ingreso")
+                            .show()
+                    }
+
+                    else -> {
+                        SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                            .setTitleText("Error servidor")
+                            .setContentText("Respuesta inesperada: $r")
+                            .show()
+                    }
                 }
-            },
-            { error ->
+            },{ error ->
+                val networkResponse = error.networkResponse
+                val statusCode = networkResponse?.statusCode ?: -1
+                val data = networkResponse?.data?.let { String(it) } ?: "sin cuerpo"
+
                 SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
-                    .setTitleText("Error")
-                    .setContentText("No se pudo enviar la solicitud: ${error.message}")
-                    .setConfirmText("Aceptar")
+                    .setTitleText("Volley ERROR")
+                    .setContentText("HTTP: $statusCode\nRespuesta:\n$data")
                     .show()
             }
+
         ) {
             override fun getParams(): MutableMap<String, String> {
                 val p = HashMap<String, String>()
-                p["id_sensor"] = idSensor
+                p["codigo_sensor"] = codigoSensor ?: ""
+                p["tipo_evento"] = "MANUAL"
                 return p
             }
+            override fun getBodyContentType(): String {
+                return "application/x-www-form-urlencoded; charset=UTF-8"
+            }
         }
+
 
         SweetAlertDialog(this, SweetAlertDialog.WARNING_TYPE)
             .setTitleText("Confirmar")
@@ -94,7 +117,6 @@ class LlaveroDigital : AppCompatActivity() {
             }
             .show()
     }
-
 
     private fun iniciarActualizacionAutomatica() {
         handler.post(object : Runnable {

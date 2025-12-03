@@ -18,6 +18,9 @@
         android:usesCleartextTraffic="true"
         tools:replace="android:icon">
         <activity
+            android:name=".EventosAccesoResidente"
+            android:exported="false" />
+        <activity
             android:name=".LlaveroDigital"
             android:exported="false" />
         <activity

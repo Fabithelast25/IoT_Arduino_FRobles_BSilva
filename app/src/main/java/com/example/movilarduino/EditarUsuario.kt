@@ -7,6 +7,7 @@ import cn.pedant.SweetAlert.SweetAlertDialog
 import com.android.volley.Request
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
+import org.json.JSONObject
 import java.net.URLEncoder
 
 class EditarUsuario : AppCompatActivity() {
@@ -54,6 +55,7 @@ class EditarUsuario : AppCompatActivity() {
             val nuevoTelefono = editTelefono.text.toString().trim()
             val nuevoEstado = spinnerEstado.selectedItem.toString()
 
+            // Validación de campos vacíos
             if (nuevoEmail.isEmpty()) {
                 SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
                     .setTitleText("Error")
@@ -70,6 +72,7 @@ class EditarUsuario : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            // Validación de formato de correo
             if (!android.util.Patterns.EMAIL_ADDRESS.matcher(nuevoEmail).matches()) {
                 SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
                     .setTitleText("Email inválido")
@@ -78,6 +81,14 @@ class EditarUsuario : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            // Validación de formato de teléfono (debe comenzar con 9 y ser chileno)
+            if (!nuevoTelefono.matches("^9\\d{8}$".toRegex())) {
+                SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                    .setTitleText("Teléfono inválido")
+                    .setContentText("El teléfono debe tener 9 dígitos y comenzar con 9")
+                    .show()
+                return@setOnClickListener
+            }
 
             // Confirmación
             SweetAlertDialog(this, SweetAlertDialog.WARNING_TYPE)
@@ -99,34 +110,45 @@ class EditarUsuario : AppCompatActivity() {
                     val queue = Volley.newRequestQueue(this)
 
                     val request = StringRequest(Request.Method.GET, url,
-                        {
-                            SweetAlertDialog(
-                                this,
-                                SweetAlertDialog.SUCCESS_TYPE
-                            )
-                                .setTitleText("Actualizado")
-                                .setContentText("El usuario fue modificado")
-                                .setConfirmClickListener {
-                                    it.dismissWithAnimation()
-                                    finish()
+                        { response ->
+                            try {
+                                val json = JSONObject(response)
+
+                                // Verificar el éxito o error en la actualización
+                                if (json.getString("success") == "false") {
+                                    SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                                        .setTitleText("Error")
+                                        .setContentText(json.getString("message"))
+                                        .show()
+                                } else {
+                                    SweetAlertDialog(this, SweetAlertDialog.SUCCESS_TYPE)
+                                        .setTitleText("Actualizado")
+                                        .setContentText("El usuario fue modificado")
+                                        .setConfirmClickListener {
+                                            it.dismissWithAnimation()
+                                            finish()
+                                        }
+                                        .show()
                                 }
-                                .show()
+                            } catch (e: Exception) {
+                                SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                                    .setTitleText("Error JSON")
+                                    .setContentText(e.message)
+                                    .show()
+                            }
                         },
-                        {
-                            SweetAlertDialog(
-                                this,
-                                SweetAlertDialog.ERROR_TYPE
-                            )
-                                .setTitleText("Error")
-                                .setContentText("No se pudo actualizar")
+                        { error ->
+                            SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                                .setTitleText("Error de conexión")
+                                .setContentText(error.message ?: "Error desconocido")
                                 .show()
                         })
 
                     queue.add(request)
-
                 }
                 .show()
         }
+
 
         // ------------------------------
         //     ELIMINAR CON CONFIRMACIÓN

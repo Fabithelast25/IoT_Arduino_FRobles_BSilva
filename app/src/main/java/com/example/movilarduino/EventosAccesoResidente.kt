@@ -16,7 +16,7 @@ import org.json.JSONObject
 import cn.pedant.SweetAlert.SweetAlertDialog
 
 
-class EventosAcceso : AppCompatActivity() {
+class EventosAccesoResidente : AppCompatActivity() {
 
     private lateinit var listView: ListView
     private val handler = Handler(Looper.getMainLooper())
@@ -37,16 +37,14 @@ class EventosAcceso : AppCompatActivity() {
             override fun getItemId(position: Int) = position.toLong()
 
             override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-                val rowView = convertView ?: LayoutInflater.from(this@EventosAcceso)
-                    .inflate(R.layout.item_evento, parent, false)
+                val rowView = convertView ?: LayoutInflater.from(this@EventosAccesoResidente)
+                    .inflate(R.layout.item_evento_residente, parent, false)
 
                 val usuario = rowView.findViewById<TextView>(R.id.txtUsuario)
                 val sensor = rowView.findViewById<TextView>(R.id.txtSensor)
                 val evento = rowView.findViewById<TextView>(R.id.txtEvento)
                 val fecha = rowView.findViewById<TextView>(R.id.txtFecha)
                 val resultado = rowView.findViewById<TextView>(R.id.txtResultado)
-                val btnPermitir = rowView.findViewById<Button>(R.id.btnPermitir)
-                val btnDenegar = rowView.findViewById<Button>(R.id.btnDenegar)
 
                 val item = listaEventos[position]
 
@@ -55,56 +53,6 @@ class EventosAcceso : AppCompatActivity() {
                 evento.text = "Evento: ${item["evento"]}"
                 fecha.text = "Fecha: ${item["fecha"]}"
                 resultado.text = "Resultado: ${item["resultado"]}"
-
-                val pendiente = item["resultado"] == "PENDIENTE"
-                btnPermitir.isEnabled = pendiente
-                btnDenegar.isEnabled = pendiente
-
-                btnPermitir.setOnClickListener {
-                    SweetAlertDialog(this@EventosAcceso, SweetAlertDialog.WARNING_TYPE)
-                        .setTitleText("Confirmar")
-                        .setContentText("¿Deseas aprobar este evento?")
-                        .setConfirmText("Sí")
-                        .setCancelText("No")
-                        .setConfirmClickListener { sDialog ->
-                            sDialog.dismissWithAnimation()
-                            actualizarEvento(item["id_evento"]!!, "APROBADO") {
-                                item["resultado"] = "APROBADO"
-                                adapter.notifyDataSetChanged()
-                                SweetAlertDialog(this@EventosAcceso, SweetAlertDialog.SUCCESS_TYPE)
-                                    .setTitleText("¡Evento aprobado!")
-                                    .setConfirmText("Aceptar")
-                                    .show()
-                            }
-                        }
-                        .setCancelClickListener { sDialog ->
-                            sDialog.dismissWithAnimation()
-                        }
-                        .show()
-                }
-
-                btnDenegar.setOnClickListener {
-                    SweetAlertDialog(this@EventosAcceso, SweetAlertDialog.WARNING_TYPE)
-                        .setTitleText("Confirmar")
-                        .setContentText("¿Deseas denegar este evento?")
-                        .setConfirmText("Sí")
-                        .setCancelText("No")
-                        .setConfirmClickListener { sDialog ->
-                            sDialog.dismissWithAnimation()
-                            actualizarEvento(item["id_evento"]!!, "DENEGADO") {
-                                item["resultado"] = "DENEGADO"
-                                adapter.notifyDataSetChanged()
-                                SweetAlertDialog(this@EventosAcceso, SweetAlertDialog.SUCCESS_TYPE)
-                                    .setTitleText("¡Evento denegado!")
-                                    .setConfirmText("Aceptar")
-                                    .show()
-                            }
-                        }
-                        .setCancelClickListener { sDialog ->
-                            sDialog.dismissWithAnimation()
-                        }
-                        .show()
-                }
 
                 return rowView
             }
@@ -123,11 +71,13 @@ class EventosAcceso : AppCompatActivity() {
         })
     }
 
+
     private fun obtenerHistorial() {
         val prefs = getSharedPreferences("user_data", MODE_PRIVATE)
         val idDepartamento = prefs.getInt("id_departamento", 0)
 
         val url = "http://98.95.8.72/obtener_solicitudes.php?id_departamento=$idDepartamento"
+
 
         val request = StringRequest(Request.Method.GET, url,
             { response ->
@@ -149,7 +99,7 @@ class EventosAcceso : AppCompatActivity() {
 
                     adapter.notifyDataSetChanged()
                 } catch (e: Exception) {
-                    SweetAlertDialog(this@EventosAcceso, SweetAlertDialog.ERROR_TYPE)
+                    SweetAlertDialog(this@EventosAccesoResidente, SweetAlertDialog.ERROR_TYPE)
                         .setTitleText("Error")
                         .setContentText("Error parseando JSON: ${e.message}")
                         .setConfirmText("Aceptar")
@@ -157,7 +107,7 @@ class EventosAcceso : AppCompatActivity() {
                 }
             },
             {
-                SweetAlertDialog(this@EventosAcceso, SweetAlertDialog.ERROR_TYPE)
+                SweetAlertDialog(this@EventosAccesoResidente, SweetAlertDialog.ERROR_TYPE)
                     .setTitleText("Error")
                     .setContentText("Error al obtener eventos")
                     .setConfirmText("Aceptar")
@@ -169,36 +119,8 @@ class EventosAcceso : AppCompatActivity() {
     }
 
 
-    private fun actualizarEvento(idEvento: String, nuevoResultado: String, callback: () -> Unit) {
-        val url = "http://98.95.8.72/actualizar_evento.php"
-
-        val request = object : StringRequest(Method.POST, url,
-            {
-                // Solo llamamos al callback, NO mostrar otro SweetAlert
-                callback()
-            },
-            {
-                SweetAlertDialog(this@EventosAcceso, SweetAlertDialog.ERROR_TYPE)
-                    .setTitleText("Error")
-                    .setContentText("Error actualizando evento")
-                    .setConfirmText("Aceptar")
-                    .show()
-            }
-        ) {
-            override fun getParams(): MutableMap<String, String> {
-                return hashMapOf(
-                    "id_evento" to idEvento,
-                    "resultado" to nuevoResultado
-                )
-            }
-        }
-
-        Volley.newRequestQueue(this).add(request)
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         handler.removeCallbacksAndMessages(null)
     }
 }
-

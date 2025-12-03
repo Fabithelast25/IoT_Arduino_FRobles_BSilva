@@ -69,6 +69,43 @@ class AgregarUsuario : AppCompatActivity() {
             return
         }
 
+        // Validación del RUT
+        if (!esRutValido(rut)) {
+            SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                .setTitleText("RUT inválido")
+                .setContentText("El RUT ingresado no es válido. Verifique el formato.")
+                .show()
+            return
+        }
+
+        // Validación del teléfono
+        if (!esTelefonoValido(telefono)) {
+            SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                .setTitleText("Teléfono inválido")
+                .setContentText("El número de teléfono debe comenzar con 9 y tener 9 dígitos.")
+                .show()
+            return
+        }
+
+        // Validación de nombres
+        if (!esNombreValido(nombres)) {
+            SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                .setTitleText("Nombres inválidos")
+                .setContentText("Los nombres solo pueden contener letras y espacios.")
+                .show()
+            return
+        }
+
+        // Validación de apellidos
+        if (!esNombreValido(apellidos)) {
+            SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                .setTitleText("Apellidos inválidos")
+                .setContentText("Los apellidos solo pueden contener letras y espacios.")
+                .show()
+            return
+        }
+
+
         val password = generarPassword(8)
         val url = "http://98.95.8.72/registrar_usuario_sensor.php"
 
@@ -77,13 +114,18 @@ class AgregarUsuario : AppCompatActivity() {
             { response ->
                 try {
                     val json = JSONObject(response)
-
-                    SweetAlertDialog(this, SweetAlertDialog.SUCCESS_TYPE)
-                        .setTitleText("Usuario creado")
-                        .setContentText(
-                            json.getString("message")
-                        )
-                        .show()
+                    // Verificar el estado de la respuesta para el error de RUT o correo duplicado
+                    if (json.getString("success") == "false") {
+                        SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                            .setTitleText("Error")
+                            .setContentText(json.getString("message"))
+                            .show()
+                    } else {
+                        SweetAlertDialog(this, SweetAlertDialog.SUCCESS_TYPE)
+                            .setTitleText("Usuario creado")
+                            .setContentText(json.getString("message"))
+                            .show()
+                    }
 
                 } catch (e: Exception) {
                     SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
@@ -126,6 +168,51 @@ class AgregarUsuario : AppCompatActivity() {
     private fun generarPassword(longitud: Int): String {
         val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
         return (1..longitud).map { chars.random() }.joinToString("")
+    }
+
+    private fun esRutValido(rut: String): Boolean {
+        // Eliminar guion
+        val rutLimpio = rut.replace("-", "")
+
+        // Verificar que el rut tenga el tamaño correcto (mínimo 2 caracteres)
+        if (rutLimpio.length < 2) return false
+
+        // Dividir el RUT y el dígito verificador
+        val cuerpoRut = rutLimpio.substring(0, rutLimpio.length - 1)
+        val dv = rutLimpio.last().toUpperCase()
+
+        // Verificar que el cuerpo del RUT solo contenga números
+        if (!cuerpoRut.all { it.isDigit() }) return false
+
+        // Algoritmo para validar el dígito verificador
+        var suma = 0
+        var multiplicador = 2
+
+        for (i in cuerpoRut.length - 1 downTo 0) {
+            suma += (cuerpoRut[i].toString().toInt()) * multiplicador
+            multiplicador = if (multiplicador == 7) 2 else multiplicador + 1
+        }
+
+        val dvCalculado = 11 - (suma % 11)
+        val dvCorrecto = when (dvCalculado) {
+            11 -> '0'
+            10 -> 'K'
+            else -> dvCalculado.toString()[0]
+        }
+
+        // Verificar si el dígito verificador calculado coincide con el ingresado
+        return dv == dvCorrecto.toUpperCase()
+    }
+
+    private fun esTelefonoValido(telefono: String): Boolean {
+        // Verificar que el teléfono no esté vacío y tenga 9 dígitos (sin contar el código de área)
+        return telefono.length == 9 && telefono.startsWith("9") && telefono.all { it.isDigit() }
+    }
+
+    private fun esNombreValido(nombre: String): Boolean {
+        // La expresión regular permite letras y espacios
+        val regex = "^[a-zA-ZáéíóúÁÉÍÓÚÑñ ]+\$".toRegex()
+        return nombre.matches(regex)
     }
 }
 

@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.ListView
 import android.widget.SimpleAdapter
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.android.volley.Request
 import com.android.volley.toolbox.JsonArrayRequest
@@ -46,7 +47,9 @@ class ListarUsuarios : AppCompatActivity() {
     }
 
     private fun cargarUsuarios() {
-        val url = "http://98.95.8.72/consulta_usuarios.php"
+        val prefs = getSharedPreferences("user_data", MODE_PRIVATE)
+        val idDepartamento = prefs.getInt("id_departamento", 0)
+        val url = "http://98.95.8.72/consulta_usuarios.php?id_departamento=$idDepartamento"
 
         val queue = Volley.newRequestQueue(this)
 

@@ -74,20 +74,21 @@ class MainActivity : AppCompatActivity() {
                         val primeraVez = json.getInt("primera_vez")
                         val idUsuario = json.getInt("id_usuario")
                         val idDepartamento = json.getInt("id_departamento")
+                        val codigoSensor = json.getString("codigo_sensor")
                         val idSensor = json.getInt("id_sensor")
                         val rol = json.getString("rol")  // 👈 AQUI RECIBIMOS EL ROL
-                        
+
                         val prefs = getSharedPreferences("user_data", MODE_PRIVATE)
                         prefs.edit().apply {
                             putInt("id_usuario", idUsuario)
                             putInt("id_departamento", idDepartamento)
-                            putInt("id_sensor", idSensor) // ⬅ aquí se guarda
+                            putInt("id_sensor", idSensor)
+                            putString("codigo_sensor", codigoSensor) // ⬅ aquí se guarda
                             putString("rol", rol)
                             apply()
                         }
 
                         if (primeraVez == 1) {
-
                             SweetAlertDialog(this, SweetAlertDialog.WARNING_TYPE)
                                 .setTitleText("Nueva contraseña requerida")
                                 .setContentText("Debe crear una nueva contraseña")
@@ -101,33 +102,37 @@ class MainActivity : AppCompatActivity() {
                                 .show()
 
                         } else {
-
                             SweetAlertDialog(this, SweetAlertDialog.SUCCESS_TYPE)
                                 .setTitleText("Bienvenido!")
                                 .setContentText("Inicio de sesión exitoso")
                                 .setConfirmText("Continuar")
                                 .setConfirmClickListener {
-
                                     // 💥 VALIDACIÓN SEGÚN ROL
                                     val nextScreen = when (rol) {
                                         "Residente" -> MenuResidente::class.java
                                         "Administrador" -> MenuAdministrador::class.java
                                         else -> MenuAdministrador::class.java // fallback
                                     }
-
                                     val intent = Intent(this, nextScreen)
                                     startActivity(intent)
-
                                     it.dismissWithAnimation()
                                 }
                                 .show()
                         }
 
                     } else {
-                        SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
-                            .setTitleText("Error")
-                            .setContentText(json.getString("message"))
-                            .show()
+                        val message = json.getString("message")
+                        if (message.contains("Cuenta bloqueada")) {
+                            SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                                .setTitleText("Cuenta bloqueada")
+                                .setContentText(message)
+                                .show()
+                        } else {
+                            SweetAlertDialog(this, SweetAlertDialog.ERROR_TYPE)
+                                .setTitleText("Error")
+                                .setContentText(message)
+                                .show()
+                        }
                     }
 
                 } catch (e: Exception) {
@@ -154,6 +159,7 @@ class MainActivity : AppCompatActivity() {
 
         Volley.newRequestQueue(this).add(stringRequest)
     }
+
 }
 
 
